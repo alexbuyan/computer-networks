@@ -29,10 +29,8 @@ public class Server {
             System.out.println("-- SERVER STARTED --");
             // wait for connections and process them
             while (serverSocket.isBound() && !serverSocket.isClosed()) {
-                threadPoolExecutor.execute(new ClientRequestHandler(serverSocket.accept()));
+                threadPoolExecutor.execute(new ClientRequestHandler());
             }
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
         } finally {
             stop();
         }
@@ -56,26 +54,25 @@ public class Server {
     }
 
     class ClientRequestHandler implements Runnable {
-        private final Socket clientSocket;
+        private Socket clientSocket;
+        private BufferedReader in;
+        private OutputStream out;
         private static final Path dirPath = Paths.get("hw3/src/main/resources/");
-        private static final File dir = new File(dirPath.toString());
         private static final String CRLF = "\r\n";
-
-        ClientRequestHandler(Socket socket) {
-            clientSocket = socket;
-        }
 
         @Override
         public void run() {
             try {
+                clientSocket = serverSocket.accept();
                 System.out.println("-- [" + clientSocket.getPort() + "] CLIENT CONNECTED --");
 
-                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                OutputStream out = clientSocket.getOutputStream();
+                in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                out = clientSocket.getOutputStream();
 
                 // handle request
                 System.out.println("-- [" + clientSocket.getPort() + "] HANDLING REQUEST --");
                 String request = in.readLine();
+                System.out.println("-- [" + clientSocket.getPort() + "] GOT REQUEST " + request + " --");
                 List<String> requestTokens = Arrays.stream(request.split(" ")).toList();
 
                 // response values;
